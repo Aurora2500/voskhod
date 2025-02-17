@@ -1,24 +1,20 @@
 package main
 
 import (
-	"crypto/tls"
-	"io"
 	"log"
-	"strings"
+	"voskhod/protocol"
 )
 
 func main() {
-	config := &tls.Config{
-		InsecureSkipVerify: true,
-	}
-	conn, err := tls.Dial("tcp", "geminiquickst.art:1965", config)
+	url := "gemini://geminiprotocol.net/"
+	db, err := protocol.InitCertsDB()
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-	defer conn.Close()
+	response, err := protocol.FetchUrl(url, db)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
 
-	conn.Write([]byte("gemini://geminiquickst.art/\r\n"))
-	sb := strings.Builder{}
-	io.Copy(&sb, conn)
-	println(sb.String())
+	println(response)
 }
