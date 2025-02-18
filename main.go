@@ -17,7 +17,7 @@ var (
 )
 
 func main() {
-	url := "gemini://geminiprotocol.net/"
+	url := "gemini://gemini.circumlunar.space/capcom/"
 	db, err := protocol.InitCertsDB()
 	if err != nil {
 		log.Fatalln(err.Error())
@@ -33,12 +33,18 @@ func main() {
 	// println(response)
 	rl.InitWindow(1600, 900, "voskhod")
 
+	var scroll_pos float32 = 0.
+	const scroll_sensitivity = 32.
+
 	for !rl.WindowShouldClose() {
+
 		lines := strings.Split(response, "\n")[1:]
+		scroll_pos += scroll_sensitivity * rl.GetMouseWheelMoveV().Y
+
 		rl.BeginDrawing()
 		rl.ClearBackground(GRAY)
 
-		y := int32(sep)
+		y := int32(sep) + int32(scroll_pos)
 		for _, line := range lines {
 			col := WHITE
 			if strings.HasPrefix(line, "#") {
@@ -52,11 +58,20 @@ func main() {
 					if idx != -1 {
 						new_url = new_url[:idx]
 					}
-					url = url + new_url
-					println("going to", url)
-					response, err = protocol.FetchUrl(url, db)
-					if err != nil {
-						log.Fatalln(err.Error())
+					if strings.HasPrefix(new_url, "http://") || strings.HasPrefix(new_url, "https://") {
+						rl.OpenURL(new_url)
+					} else {
+						if strings.HasPrefix(new_url, "gemini://") {
+							url = new_url
+						} else {
+							url = url + new_url
+						}
+						println("going to", url)
+						response, err = protocol.FetchUrl(url, db)
+						scroll_pos = 0
+						if err != nil {
+							log.Fatalln(err.Error())
+						}
 					}
 				}
 			}
