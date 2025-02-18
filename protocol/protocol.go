@@ -22,8 +22,6 @@ func FetchUrl(url_addr string, cs *CertStore) (string, error) {
 		addr.WriteString(":1965")
 	}
 
-	println("fetching", addr.String())
-
 	config := &tls.Config{
 		InsecureSkipVerify: true,
 	}
