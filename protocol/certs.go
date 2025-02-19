@@ -10,10 +10,26 @@ import (
 )
 
 var (
-	ErrInvalidCert = errors.New("gemini: Invalid TOFU certificate")
+	ErrInvalidCert = errors.New("gemini: invalid TOFU certificate")
 )
 
-func InitCertsDB() (*CertStore, error) {
+type CertStore interface {
+	CheckCertificate(hostname string, cert *x509.Certificate) (bool, error)
+}
+
+type SessionCertStore map[string]*x509.Certificate
+
+func (cs *SessionCertStore) CheckCertificate(hostname string, cert *x509.Certificate) (bool, error) {
+	if storedCert, ok := (*cs)[hostname]; ok {
+		return storedCert.Equal(cert), nil
+	}
+	(*cs)[hostname] = cert
+	return true, nil
+}
+
+type SQLiteCertStore sql.DB
+
+func InitCertsDB() (*SQLiteCertStore, error) {
 	db, err := sql.Open("sqlite3", "certs.db")
 	if err != nil {
 		return nil, err
@@ -26,12 +42,10 @@ func InitCertsDB() (*CertStore, error) {
 		)
 	`)
 
-	return (*CertStore)(db), nil
+	return (*SQLiteCertStore)(db), nil
 }
 
-type CertStore sql.DB
-
-func (cs *CertStore) CheckCertificate(hostname string, cert *x509.Certificate) (bool, error) {
+func (cs *SQLiteCertStore) CheckCertificate(hostname string, cert *x509.Certificate) (bool, error) {
 
 	db := (*sql.DB)(cs)
 

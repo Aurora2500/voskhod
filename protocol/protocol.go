@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func FetchUrl(url_addr string, cs *CertStore) (string, error) {
+func FetchUrl(url_addr string, cs CertStore) (string, error) {
 	parsed_url, err := url.Parse(url_addr)
 	if err != nil {
 		return "", err
